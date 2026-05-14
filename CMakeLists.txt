@@ -4,7 +4,37 @@ project(diningPholosophers)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# main project build setup
+#### main project build setup
 file(GLOB_RECURSE SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/code/source/*.cpp)
-add_executable(diningPholosophers ${CMAKE_CURRENT_SOURCE_DIR}/code/main.cpp ${SRC_FILES})
-target_include_directories(diningPholosophers PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/code/headers)
+add_executable(main ${CMAKE_CURRENT_SOURCE_DIR}/code/main.cpp ${SRC_FILES})
+target_include_directories(main PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/code/headers)
+
+
+#### For Testing Project
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(
+    tests ${CMAKE_CURRENT_SOURCE_DIR}/code/tests/gtest.cpp
+    ${SRC_FILES}
+)
+target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/code/headers)
+target_include_directories(tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/code/tests)
+
+target_link_libraries( 
+    tests
+    GTest::gtest_main
+)
+
+include(GoogleTest)
+
+gtest_discover_tests(tests)
