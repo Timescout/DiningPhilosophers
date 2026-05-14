@@ -11,7 +11,21 @@
 
 TEST(PhilosopherSimulationUnitTest, DefaultConstructor_Works) 
 {
-    EXPECT_NO_THROW(Philosophers::PhilosopherSimulation testSim);
+    Philosophers::PhilosopherSimulation testSim;
+
+    EXPECT_EQ(testSim.getNumberPhilosophers(), Philosophers::PhilosopherSimulation::DEFAULTNUMBERPHILOSOPHERS);
+    EXPECT_EQ(testSim.getSimulationTime(), Philosophers::PhilosopherSimulation::DEFAULTSIMULATIONTIME);
+    EXPECT_EQ(testSim.getSimulationTimeoutTime(), Philosophers::PhilosopherSimulation::DEFAULTSIMULATIONTIMEOUTTIME);
+}
+
+TEST(PhilosopherSimulationUnitTest, ArgumentedConstructor_2Philosophers0MinTime1Maxtime_Works)
+{
+    int numTestPhilosophers = 2, minTime = 0, maxTime = 1;
+    Philosophers::PhilosopherSimulation testSim(numTestPhilosophers, minTime, maxTime);
+    
+    EXPECT_EQ(testSim.getNumberPhilosophers(), numTestPhilosophers);
+    EXPECT_EQ(testSim.getSimulationTime(), minTime);
+    EXPECT_EQ(testSim.getSimulationTimeoutTime(), maxTime);
 }
 
 TEST(PhilosopherSimulationUnitTest, SetNumberPhilosophers_0_Throws) 
@@ -40,4 +54,13 @@ TEST(PhilosopherSimulationUnitTest, SetSimulationTimeFrame_SmallerTimeoutTime_Th
     Philosophers::PhilosopherSimulation testSim;
 
     EXPECT_THROW(testSim.setSimulationTimeFrame(1, 0), std::logic_error);
+}
+
+TEST(PhilosopherSimulationUnitTest, CallSimulationNoDeadlock_DoesNotSegFault)
+{
+    Philosophers::PhilosopherSimulation testSim;
+
+    EXPECT_EXIT((testSim.simulateNoDeadlock(), exit(0)), testing::ExitedWithCode(0), ".*");
+    // Source: https://stackoverflow.com/questions/47583352/how-to-catch-segmentation-fault-with-google-test
+    // acssesed 5/14/26
 }

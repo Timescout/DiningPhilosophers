@@ -30,7 +30,7 @@ namespace Philosophers
         unsigned int simulationTimeoutTime_;
 
         /// @brief The vector of chopsticks. This will be as big as the number of philosophers.
-        std::vector<std::mutex*> chopsticks_;
+        //std::vector<std::mutex> chopsticks_;
 
 
 
@@ -38,8 +38,12 @@ namespace Philosophers
 
         /// @brief The function that simulates a philosopher. This is run using multithreading.
         /// @param philosopherNumber The label for this philosopher. I.e "Philosopher 1, Philosopher 2, etc."
-        static void simulatePhilosopher(int philosopherNumber, std::mutex chopstickOne, std::mutex chopstickTwo) 
-        {}
+        void simulatePhilosopher(int philosopherNumber, std::mutex* chopstickOne, std::mutex* chopstickTwo)
+        {
+            std::cout << "Philosopher number " << philosopherNumber << " reporting.\n";
+            //std::cout << "Chopstick one is " << chopstickOne->try_lock() << ".\n";
+            //std::cout << "Chopstick two is " << chopstickTwo->try_lock() << ".\n";
+        }
 
 
 
@@ -50,29 +54,32 @@ namespace Philosophers
         /// @param numberPhilosophers The number of philosophers simulated. Must be at least 2.
         /// @param simulationTime The minimum time the simulation will run for.
         /// @param simulationTimeoutTime The maximum time the simulation will run for.
-        PhilosopherSimulation(unsigned int numberPhilosophers, unsigned int simulationTime, unsigned int simulationTimeoutTime) :
-            chopsticks_(numberPhilosophers, nullptr)
+        /// @warning A number of threads will run equal to numberPhilosophers.
+        PhilosopherSimulation(unsigned int numberPhilosophers, unsigned int simulationTime, unsigned int simulationTimeoutTime) 
         {
             setNumberPhilosophers(numberPhilosophers);
             setSimulationTimeFrame(simulationTime, simulationTimeoutTime);
-            for (int i = 0; i < numberPhilosophers_; i++) {
-                std::mutex* a = new std::mutex;
-                chopsticks_[i] = a;
-            }
+            // for (int i = 0; i < numberPhilosophers_; i++) {
+            //     std::mutex* a = new std::mutex;
+            //     chopsticks_[i] = a;
+            // }
         }
 
-        PhilosopherSimulation() 
-        {
-            PhilosopherSimulation(5, 10, 20);
-        }
+        /// I like to include the default constructed values as their own variables so I can use them for testing.
+        inline static int DEFAULTNUMBERPHILOSOPHERS = 5;
+        inline static int DEFAULTSIMULATIONTIME = 10;
+        inline static int DEFAULTSIMULATIONTIMEOUTTIME = 20;
+        PhilosopherSimulation() :
+            PhilosopherSimulation(DEFAULTNUMBERPHILOSOPHERS, DEFAULTSIMULATIONTIME, DEFAULTSIMULATIONTIMEOUTTIME)
+        {}
 
         ~PhilosopherSimulation() 
         {
-            for (std::vector<std::mutex*>::iterator i = chopsticks_.begin(); i != chopsticks_.end(); i++)
-            {
-                delete *i;
-                *i = nullptr;
-            }
+            // for (auto i = chopsticks_.begin(); i != chopsticks_.end(); i++)
+            // {
+            //     delete *i;
+            //     *i = nullptr;
+            // }
         }
 
 
@@ -96,6 +103,8 @@ namespace Philosophers
         {
             if (newNumberPhilosophers < 2) { throw(std::out_of_range("Tried to create simulation with to few philosophers")); }
             numberPhilosophers_ = newNumberPhilosophers;
+            // since the number of philosophers changed, the number of chopsticks has to change to match.
+            //chopsticks_ = std::vector<std::mutex>(newNumberPhilosophers, std::mutex());
         }
 
         /// @brief Set the simulation times. Since we need to enforce that simulation time is shorter than timeout time, we need to set both at once.
@@ -125,29 +134,50 @@ namespace Philosophers
         //     }
         // }
 
-        // void simulateNoDeadlock() 
-        // {
-        //     // I'm using an array of threads rather than a vector for a number of reasons.
-        //     // First since the number of philosophers won't change during the simulation and is known at the creation of the array, there are few downsides to using an array.
-        //     // Next, using a Vector calls the default constructor on the thread, which we can't make and causes an error.
-        //     //std::thread philosophers [getNumberPhilosophers()];
+        void simulateNoDeadlock() 
+        {
+            // I'm using an array of threads rather than a vector for a number of reasons.
+            // First since the number of philosophers won't change during the simulation and is known at the creation of the array, there are few downsides to using an array.
+            // Next, using a Vector calls the default constructor on the thread, which we can't make and causes an error.
+            std::vector<std::thread> philosophers(getNumberPhilosophers());
 
-        //     // Create one philosopher with "righthanded-ness" to prevent deadlock.
-        //     std::thread philosophers = std::thread(simulatePhilosopher, 0, 1, 0); 
-        //     philosophers.join();
+            std::vector<std::mutex*> chopsticks(getNumberPhilosophers(), nullptr);
+            for (auto &i : chopsticks)
+            {
+                i = new std::mutex();
+            }
 
-        //     // create all the rest of the philosophers with "lefthanded-ness".
-        //     // for (int i = 1; i < getNumberPhilosophers(); i++)
-        //     // {
-        //     //     philosophers[i] = std::thread(simulatePhilosopher, i, i, (i+1) % getNumberPhilosophers());
-        //     // }
+            // Create one philosopher with "righthanded-ness" to prevent deadlock.
+            philosophers.push_back(std::thread(
+                &PhilosopherSimulation::simulatePhilosopher, // Thread function
+                this, // this pointer which runs the thread on a member function
+                0, // the philosopher number
+                chopsticks[1], // the first chopstick, the larger only for this philosopher.
+                chopsticks[0] // the second chopstick
+            ));
 
-        //     // // wait for all philosophers to get done eating.
-        //     // for (int i = 0; i < getNumberPhilosophers(); i++)
-        //     // {
-        //     //     philosophers[i].join();
-        //     // }
-        // }
+            // create all the rest of the philosophers with "lefthanded-ness".
+            for (int i = 1; i < getNumberPhilosophers(); i++)
+            {
+                philosophers.push_back(std::thread(
+                    &PhilosopherSimulation::simulatePhilosopher, // Thread function
+                    this, // this pointer which runs the thread on a member function
+                    i, // the philosopher number
+                    chopsticks[i], // the first chopstick
+                    chopsticks[(i+1) % getNumberPhilosophers()] // the second chopstick, which might be the 0th chopstick.
+                ));
+            }
+
+            // wait for all philosophers to get done eating.
+            for (int i = 0; i < getNumberPhilosophers(); i++)
+            {
+                philosophers[i].join();
+            }
+            for (auto &i : chopsticks)
+            {
+                delete i;
+            }
+        }
     };
 /*
     // This will simulate a philosopher eating and thinking.
@@ -180,36 +210,5 @@ namespace Philosophers
             }
         }
     }
-
-    void simulateDeadlock()
-    {
-        std::thread philosophers[NUMBERPHILOSOPHERS];
-        for (int i = 0; i < NUMBERPHILOSOPHERS; i++)
-        {
-            philosophers[i] = std::thread(simulate, i, i, (i + 1) % NUMBERPHILOSOPHERS);
-        }
-        for (int i = 0; i < NUMBERPHILOSOPHERS; i++)
-        {
-            philosophers[i].join();
-        }
-    }
-
-    void simulateNoDeadlock()
-    {
-        initialize();
-        std::thread philosophers[NUMBERPHILOSOPHERS];
-        for (int i = 0; i < NUMBERPHILOSOPHERS-1; i++)
-        {
-            philosophers[i] = std::thread(simulate, i, i, (i + 1) % NUMBERPHILOSOPHERS); // each of the first four philosophers can be set up in this way
-        }
-        philosophers[NUMBERPHILOSOPHERS-1] = std::thread(simulate, NUMBERPHILOSOPHERS-1, 0, NUMBERPHILOSOPHERS-1); // but the fifth must be special
-        for (int i = 0; i < NUMBERPHILOSOPHERS; i++)
-        {
-            philosophers[i].join();
-        }
-        
-        teardown();
-    }
         */
 };
-
