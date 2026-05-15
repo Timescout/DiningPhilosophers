@@ -1,4 +1,5 @@
 // Philosophers.h
+// Dining Philosophers Problem
 // Author: Andrew Bergman
 // 3/21/23 updated 5/11/26
 // Operating Systems class, later personal project.

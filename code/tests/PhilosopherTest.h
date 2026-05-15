@@ -1,13 +1,18 @@
 // PhilosopherTest.h
 // Dining Philosophers problem
-// Andrew Bergman
+// Author: Andrew Bergman
 // 5/13/26
+// Operating Systems class, later personal project.
 //
 // Tests for PhilosopherSimulation class.
+
+
 
 #include <gtest/gtest.h>
 
 #include "Philosopher.h"
+
+
 
 TEST(PhilosopherSimulationUnitTest, DefaultConstructor_Works) 
 {

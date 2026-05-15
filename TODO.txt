@@ -1,7 +1,1 @@
 Update documentation with an explination of the problem for people who have not encountered deadlocking and might be lost otherwise. 
-
-Make the code run on Linux
-
-Review cmake to get the code to run.
-
-Make the code run both senarios, with the deadlocking senario timing out and quitting.
