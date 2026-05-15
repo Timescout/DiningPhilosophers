@@ -3,7 +3,9 @@
 // 3/21/23 updated 5/11/26
 // Operating Systems class, later personal project.
 //
-// This file defines the simulation class.
+// This file defines the PhilosopherSimulation class.
+
+
 
 #include <vector>
 #include <iostream>
@@ -11,6 +13,8 @@
 #include <mutex>
 #include <thread>
 #include <stdexcept>
+
+
 
 namespace Philosophers
 {
@@ -35,6 +39,8 @@ namespace Philosophers
 
         /// @brief The function that simulates a philosopher. This is run using multithreading.
         /// @param philosopherNumber The label for this philosopher. I.e "Philosopher 1, Philosopher 2, etc."
+        /// @param chopstickOne Pointer to the first mutex.
+        /// @param chopstickTwo Pointer to the second mutex.
         void simulatePhilosopher(int philosopherNumber, std::mutex* chopstickOne, std::mutex* chopstickTwo)
         {
             // Set up the points in time which are relevant.
@@ -84,7 +90,7 @@ namespace Philosophers
             setSimulationTimeFrame(simulationTime, simulationTimeoutTime);
         }
 
-        /// I like to include the default constructed values as their own variables so I can use them for testing.
+        // I like to include the default constructed values as their own variables so I can use them for testing.
         inline const static int DEFAULTnUMBERpHILOSOPHERS = 5, DEFAULTsIMULATIONtIME = 10, DEFAULTsIMULATIONtIMEOUTtIME = 20;
         PhilosopherSimulation() :
             PhilosopherSimulation(DEFAULTnUMBERpHILOSOPHERS, DEFAULTsIMULATIONtIME, DEFAULTsIMULATIONtIMEOUTtIME)
@@ -108,7 +114,7 @@ namespace Philosophers
 
         /// @brief Set the number of philosophers
         /// @param newNumberPhilosophers Must be at least 2 as the simulation must have at least 2 philosophers.
-        /// @throws std::out_of_range If newNumberPhilosophers < 2.
+        /// @throws out_of_range If newNumberPhilosophers < 2.
         void setNumberPhilosophers(unsigned int newNumberPhilosophers) 
         {
             if (newNumberPhilosophers < 2) { throw(std::out_of_range("Tried to create simulation with to few philosophers")); }
@@ -118,6 +124,7 @@ namespace Philosophers
         /// @brief Set the simulation times. Since we need to enforce that simulation time is shorter than timeout time, we need to set both at once.
         /// @param newSimulationTime Must be shorter or equal to than newSimulationTimeoutTime.
         /// @param newSimulationTimeoutTime Must be longer or equal to than newSimulatinTime.
+        /// @throws logic_error If newSimulationTimeoutTime < newSimulationTime.
         void setSimulationTimeFrame(unsigned int newSimulationTime, unsigned int newSimulationTimeoutTime)
         {
             if ( newSimulationTimeoutTime < newSimulationTime) { throw std::logic_error("simulation time longer than simulation timeout time"); }
@@ -125,6 +132,11 @@ namespace Philosophers
             simulationTimeoutTime_ = newSimulationTimeoutTime;
         }
 
+
+        ///// class methods /////
+
+        /// @brief Run the simulation.
+        /// @param Deadlock Flag for whether the deadlock should happen.
         void simulateDeadlock(bool Deadlock = true) 
         {
             // Create Chopsticks
@@ -157,41 +169,10 @@ namespace Philosophers
             for (auto &i : chopsticks) { delete i; i = nullptr; }
         }
 
+        /// @brief Run the simulation with no deadlocks.
         void simulateNoDeadlock() 
         {
             simulateDeadlock(false); // I did this because code reuse!
         }
     };
-/*
-    // This will simulate a philosopher eating and thinking.
-    // To prevent a deadlock ensure that chopstickOne < chopstickTwo
-    void simulate(int philosopherNumber, int chopstickOne, int chopstickTwo) 
-    {
-        int aggregate = 0;
-        int sleepTime = 1000;
-        int eatTime = 1000;
-        while(aggregate < SIMULATIONTIME*1000)
-        {
-            
-            aggregate += sleepTime*2; // we sleep twice in the simulation
-            aggregate += eatTime;
-            if (aggregate < SIMULATIONTIME*1000)
-            {
-                std::cout << "Philosopher " << philosopherNumber << " thinking for " << sleepTime/1000 << " seconds.\n";
-                //Sleep(sleepTime);
-                std::cout << "Philosopher " << philosopherNumber << " done thinking, now eating.\n";
-                chopsticks[chopstickOne]->lock(); // pick up chopstick one
-                std::cout << "Philosopher " << philosopherNumber << " picked up his right hand chopstick\n";
-                //Sleep(sleepTime); // to ensure deadlock if one is possible, add a delay between picking up different chopsticks
-                chopsticks[chopstickTwo]->lock(); // pick up chopstick two
-                std::cout << "Philosopher " << philosopherNumber << " picked up his left hand chopstick\n";
-                std::cout << "Philosopher " << philosopherNumber << " eating for " << eatTime/1000 << " seconds.\n";
-                //Sleep(eatTime);
-                std::cout << "Philosopher " << philosopherNumber << " done eating, now thinking.\n";
-                chopsticks[chopstickOne]->unlock();
-                chopsticks[chopstickTwo]->unlock(); 
-            }
-        }
-    }
-        */
 };
