@@ -37,9 +37,35 @@ namespace Philosophers
         /// @param philosopherNumber The label for this philosopher. I.e "Philosopher 1, Philosopher 2, etc."
         void simulatePhilosopher(int philosopherNumber, std::mutex* chopstickOne, std::mutex* chopstickTwo)
         {
-            std::cout << "Philosopher number " << philosopherNumber << " reporting.\n";
-            //std::cout << "Chopstick one is " << chopstickOne->try_lock() << ".\n";
-            //std::cout << "Chopstick two is " << chopstickTwo->try_lock() << ".\n";
+            // Set up the points in time which are relevant.
+            using namespace std::chrono;
+            time_point stopEatingTime = system_clock::now() + seconds(getSimulationTime()-1);           // Minus one because the thread
+            time_point absoluteStopTime = system_clock::now() + seconds(getSimulationTimeoutTime()-1);  // sleeps for one second later.
+            
+            // Main Simulation loop.
+            while (system_clock::now() < stopEatingTime) 
+            {
+                // Try to pick up the first chopstick. If it is in use, return to the start of the loop.
+                if (!chopstickOne->try_lock()) { continue; }
+                std::cout << "Philosopher " + std::to_string(philosopherNumber) + " picked up a chopstick.\n"; 
+                std::this_thread::sleep_for(duration<int>(1)); // Wait here for a second. This forces a deadlock to happen. 
+
+                // Wait to pick up the second chopstick. Will wait until the simulation ends.
+                while (system_clock::now() < absoluteStopTime)
+                {
+                    if (!chopstickTwo->try_lock()) { continue; }
+                    std::cout << "Philosopher " + std::to_string(philosopherNumber) + " picked up a second chopstick.\n"; 
+
+                    std::this_thread::sleep_for(duration<int>(1)); // Eat for a second.
+
+                    // Put down the second chopstick. Here to ensure it is locked first.
+                    chopstickTwo->unlock();
+                    break;
+                }
+                // Put down the chopsticks
+                chopstickOne->unlock();
+                std::cout << "Philosopher " + std::to_string(philosopherNumber) + " put down their chopsticks.\n"; 
+            }
         }
 
 

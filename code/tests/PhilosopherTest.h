@@ -58,7 +58,7 @@ TEST(PhilosopherSimulationUnitTest, SetSimulationTimeFrame_SmallerTimeoutTime_Th
 
 TEST(PhilosopherSimulationUnitTest, CallSimulationNoDeadlock_Exits)
 {
-    Philosophers::PhilosopherSimulation testSim;
+    Philosophers::PhilosopherSimulation testSim(5, 5, 6);
 
     EXPECT_EXIT((testSim.simulateNoDeadlock(), exit(0)), testing::ExitedWithCode(0), ".*");
     // Source: https://stackoverflow.com/questions/47583352/how-to-catch-segmentation-fault-with-google-test
