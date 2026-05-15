@@ -13,9 +13,9 @@ TEST(PhilosopherSimulationUnitTest, DefaultConstructor_Works)
 {
     Philosophers::PhilosopherSimulation testSim;
 
-    EXPECT_EQ(testSim.getNumberPhilosophers(), Philosophers::PhilosopherSimulation::DEFAULTNUMBERPHILOSOPHERS);
-    EXPECT_EQ(testSim.getSimulationTime(), Philosophers::PhilosopherSimulation::DEFAULTSIMULATIONTIME);
-    EXPECT_EQ(testSim.getSimulationTimeoutTime(), Philosophers::PhilosopherSimulation::DEFAULTSIMULATIONTIMEOUTTIME);
+    EXPECT_EQ(testSim.getNumberPhilosophers(), Philosophers::PhilosopherSimulation::DEFAULTnUMBERpHILOSOPHERS);
+    EXPECT_EQ(testSim.getSimulationTime(), Philosophers::PhilosopherSimulation::DEFAULTsIMULATIONtIME);
+    EXPECT_EQ(testSim.getSimulationTimeoutTime(), Philosophers::PhilosopherSimulation::DEFAULTsIMULATIONtIMEOUTtIME);
 }
 
 TEST(PhilosopherSimulationUnitTest, ArgumentedConstructor_2Philosophers0MinTime1Maxtime_Works)
@@ -56,11 +56,20 @@ TEST(PhilosopherSimulationUnitTest, SetSimulationTimeFrame_SmallerTimeoutTime_Th
     EXPECT_THROW(testSim.setSimulationTimeFrame(1, 0), std::logic_error);
 }
 
-TEST(PhilosopherSimulationUnitTest, CallSimulationNoDeadlock_DoesNotSegFault)
+TEST(PhilosopherSimulationUnitTest, CallSimulationNoDeadlock_Exits)
 {
     Philosophers::PhilosopherSimulation testSim;
 
     EXPECT_EXIT((testSim.simulateNoDeadlock(), exit(0)), testing::ExitedWithCode(0), ".*");
+    // Source: https://stackoverflow.com/questions/47583352/how-to-catch-segmentation-fault-with-google-test
+    // acssesed 5/14/26
+}
+
+TEST(PhilosopherSimulationUnitTest, CallSimulationDeadlock_Exits)
+{
+    Philosophers::PhilosopherSimulation testSim(5, 5, 6);
+
+    EXPECT_EXIT((testSim.simulateDeadlock(), exit(0)), testing::ExitedWithCode(0), ".*");
     // Source: https://stackoverflow.com/questions/47583352/how-to-catch-segmentation-fault-with-google-test
     // acssesed 5/14/26
 }
