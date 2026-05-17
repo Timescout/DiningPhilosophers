@@ -1,26 +1,30 @@
-explination of problem, including deadlocks, multithreading, overview of the theoretical problem.
+# The Dining Philosophers Simulation
+## Building the Code
+This project uses cMake for its build process. All commands will be relative to the git repository. Use the following commands to build:
 
-explination of objects used in the code, including mutex, threads, 
+> cmake -B build
 
-approaches to solving the problem including the one I implement.
+This will create a new folder called build and generate cmake files in that folder.
 
-Sources, including the paper I cite.
+>cmake --build build
 
-As proccessing power grew the number of cores in computers increased. High performance programs started to use more than one core to accomplish tasks in parallel to reduce the overall time it took to complete a task, like baking two cakes in two ovens at the same time rather than one oven twice. A program does this by asking the operating system to run on more than one core which the operating system then does if another core is avaliable. This process is called multithreading, as the indiviual processes, the "cakes", are individually called threads. When I was in my operating systems class in college we covered how the operating system handles multithreading and this project was the capstone of that unit. 
+This will build the project and put the executibles in the build folder.
 
-Multithreading is not as simple as cutting a project up into parts and running each part on a separate thread. This project will only cover one of many challenges it creats which is the problem of deadlocking. This is when two separate threads prevent each other from continuing. 
+>./build/main
 
+>./build/tests
 
+These will run the main program and the unit tests respectivly. 
 
+## The Project
+This project was an assignment for my operating systems class in college and I returned to improve it. The project implements a solution to the Dining Philosophers problem which is a theoretical concurrency problem that creates and solves a deadlock.
 
-# Overview
-An implementation of the classic dining philosopher deadlock problem. This was a school project for my operating systems class. The assignment was two parts, the first (Lab 5) was to create a senario that would deadlock. We were then to update the code to ensure that a deadlock did not happen and do a writeup. The writeup is included in this repo. 
+The problem is this: there are five philosophers sat at a round table with five chopsticks, one between each pair of philosophers. There is some food in the middle of the table which a philosopher can eat if they have two chopsticks. Since there are the same number of philosophers and chopsticks if one of them is eating another cannot be eating. 
 
-##### The Dining Philosopher problem
-There are five philosophers sitting around a circular table. In the middle of the table is a bowl of food which they will eat from when they get hungry, which will happen from time to time. In order to eat from this bowl they must first pick up two chopsticks which are placed between each pair of philosophers for a total of five chopsticks. When one picks up a chopstick, the philosopher next to him on the side he picks it up from cannot use it to eat until the one with the chopstick is done and puts the chopstick down again. 
+This relates to programming like so: say there are some number of processes or threads and resources that they must share. If each process greedly grabbed as many resources as they could without some way to prevent deadlocks, that would be like each philosopher grabbing a single chopstick. If every chopstick is held without anyone letting go, noone gets to eat and the system deadlocks. 
 
-It is not hard for the philosophers to get into a senario where each holds only one chopstick. This means each is purpetually waiting for another to relinquish theirs. This senario is a deadlock, which is the center of this problem. 
+The assignment was to implement a way to prevent this from happening. Each philosopher is a thread, each chopstick is a mutex, which is a lock for resources, and there are the same number of each. They can "eat" which is represented by the thread sleeping for some time. 
 
-Any solution to this problem must prevent this deadlock and solutions are compared based on how well they manage the resources and facilitate the eating of food. 
+There are many solutions to this problem each with their tradeoffs. The solution I implemented is to designate philosophers either as "left handed" or "right handed". It has been shown that as long as one philosopher is opposite handed to all the rest, deadlock is impossible.  I have included the writeup for that assignment in this repository but it talks about old code that has been rewritten and is more in-depth about different solutions and their tradeofs.
 
-
+The main program will show how this works: it will run the same simulation twice. One time where one philosopher is opposite handed and another where all philosophers are same handed. The status of the chopsticks is printed to the screen, and the simulation will time out and force quit after two minutes when deadlock occurs. 
